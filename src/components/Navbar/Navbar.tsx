@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { FiGithub, FiMenu, FiX } from 'react-icons/fi'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { FiGithub, FiMenu, FiX, FiLogOut, FiLayers } from 'react-icons/fi'
 import { useScrollY } from '../../hooks/useScrollY'
+import { useSession } from '../../hooks/useSession'
 
 const links = [
   { label: 'Features', href: '#features' },
@@ -10,10 +11,89 @@ const links = [
   { label: 'Documentation', href: '#docs' },
 ]
 
+function UserMenu() {
+  const { logout, selectedRepo } = useSession()
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Close on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  function handleLogout() {
+    logout()
+    setOpen(false)
+    navigate('/')
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-surface/60 hover:border-white/20 hover:bg-surface transition-colors"
+      >
+        {/* Avatar circle */}
+        <div className="w-6 h-6 rounded-full bg-accent/30 border border-accent/40 flex items-center justify-center shrink-0">
+          <span className="text-[10px] font-bold text-accent-light">R</span>
+        </div>
+        {selectedRepo && (
+          <span className="text-xs text-text-secondary/80 max-w-[120px] truncate hidden sm:block">
+            {selectedRepo.name}
+          </span>
+        )}
+        <FiLayers size={12} className="text-text-secondary/50" />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.97 }}
+            transition={{ duration: 0.14 }}
+            className="absolute right-0 mt-2 w-44 rounded-xl border border-white/8 bg-surface shadow-xl shadow-black/40 overflow-hidden z-50"
+          >
+            <Link
+              to="/app"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-white/5 hover:text-text-primary transition-colors"
+            >
+              <FiLayers size={13} />
+              Open Rexi
+            </Link>
+            <div className="h-px bg-white/6 mx-2" />
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400/80 hover:bg-red-400/6 hover:text-red-400 transition-colors"
+            >
+              <FiLogOut size={13} />
+              Log out
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 export default function Navbar() {
   const scrollY = useScrollY()
+  const { loggedIn, logout } = useSession()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const scrolled = scrollY > 20
+
+  function handleLogout() {
+    logout()
+    setOpen(false)
+    navigate('/')
+  }
 
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden'
@@ -66,12 +146,16 @@ export default function Navbar() {
           >
             <FiGithub size={18} />
           </a>
-          <Link
-            to="/auth"
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-accent hover:bg-accent-light text-white transition-colors duration-200 shadow-lg shadow-accent/20"
-          >
-            Get Started
-          </Link>
+          {loggedIn ? (
+            <UserMenu />
+          ) : (
+            <Link
+              to="/auth"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-accent hover:bg-accent-light text-white transition-colors duration-200 shadow-lg shadow-accent/20"
+            >
+              Get Started
+            </Link>
+          )}
         </div>
 
         {/* Mobile burger */}
@@ -113,12 +197,30 @@ export default function Navbar() {
               >
                 <FiGithub size={16} /> GitHub
               </a>
-              <Link
-                to="/auth"
-                className="mt-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-accent hover:bg-accent-light text-white transition-colors text-center"
-              >
-                Get Started
-              </Link>
+              {loggedIn ? (
+                <>
+                  <Link
+                    to="/app"
+                    onClick={() => setOpen(false)}
+                    className="mt-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-white/10 text-text-secondary text-center transition-colors"
+                  >
+                    Open Rexi
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2.5 text-sm font-medium rounded-lg text-red-400/80 border border-red-400/20 text-center transition-colors"
+                  >
+                    Log out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="mt-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-accent hover:bg-accent-light text-white transition-colors text-center"
+                >
+                  Get Started
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

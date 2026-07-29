@@ -21,6 +21,8 @@ interface AvatarStateContextValue {
   state: AvatarState
   /** Call on every keystroke while the user is composing a message. */
   notifyTyping: () => void
+  /** Play greeting once (e.g. first-ever message typed). */
+  startGreeting: () => void
   /** Message sent — Rexi is preparing a response. */
   startThinking: () => void
   /** Reply has begun streaming into the message list. */
@@ -48,13 +50,20 @@ export function AvatarProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const notifyTyping = useCallback(() => {
-    // Don't let typing interrupt an active response or the intro greeting.
     setState((s) => (s === 'thinking' || s === 'speaking' || s === 'greeting' ? s : 'listening'))
     clearTimeout(typingTimer.current)
     typingTimer.current = setTimeout(() => {
-      // Only fall back to idle if we're still in the listening state.
       setState((s) => (s === 'listening' ? 'idle' : s))
     }, LISTENING_DEBOUNCE)
+  }, [])
+
+  const startGreeting = useCallback(() => {
+    clearTimeout(typingTimer.current)
+    setState('greeting')
+    // Settle to listening after the greeting plays
+    greetingTimer.current = setTimeout(() => {
+      setState((s) => (s === 'greeting' ? 'listening' : s))
+    }, GREETING_DURATION)
   }, [])
 
   const startThinking = useCallback(() => {
@@ -73,7 +82,7 @@ export function AvatarProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AvatarStateContext.Provider value={{ state, notifyTyping, startThinking, startSpeaking, goIdle }}>
+    <AvatarStateContext.Provider value={{ state, notifyTyping, startGreeting, startThinking, startSpeaking, goIdle }}>
       {children}
     </AvatarStateContext.Provider>
   )
