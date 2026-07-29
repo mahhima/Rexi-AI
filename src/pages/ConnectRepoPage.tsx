@@ -5,7 +5,7 @@ import { FiGitBranch, FiArrowRight, FiCheck } from 'react-icons/fi'
 import { Avatar } from '../components/Avatar/Avatar'
 import { useSession, type Repo } from '../hooks/useSession'
 
-const BACKEND_URL = 'http://localhost:8000'
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string
 
 const LANG_COLOR: Record<string, string> = {
   TypeScript: '#3178C6',

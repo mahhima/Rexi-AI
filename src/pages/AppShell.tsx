@@ -11,7 +11,7 @@ import RepoPanel from '../components/Sidebar/RepoPanel'
 import { AvatarProvider, useAvatarState } from '../hooks/useAvatarState'
 import { useSession, type Repo } from '../hooks/useSession'
 
-const BACKEND_URL = 'http://localhost:8000'
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string
 const SpeechRecognition =
   (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 

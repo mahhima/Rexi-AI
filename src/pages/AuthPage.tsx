@@ -6,7 +6,7 @@ import AvatarCompanion from '../components/Avatar/AvatarCompanion'
 import type { AvatarState } from '../components/Avatar/Avatar'
 import { useSession } from '../hooks/useSession'
 
-const BACKEND_URL = 'http://localhost:8000'
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL as string
 
 type Tab = 'signin' | 'signup'
 
